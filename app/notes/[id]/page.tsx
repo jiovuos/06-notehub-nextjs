@@ -13,9 +13,9 @@ import NoteDetailsClient from "./NoteDetails.client";
 // }) {
 
 export default async function NoteDetailsPage(
-  props: { params: { id: string } }
+  props: Promise<{ params: { id: string } }>
 ) {
-  const { params } = props;
+  const { params } = await props;
 
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery({
