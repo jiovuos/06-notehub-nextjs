@@ -1,8 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "use-debounce";
+import type { FetchNotesResponse } from "@/lib/api";
 import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import NoteForm from "@/components/NoteForm/NoteForm";
@@ -11,18 +12,24 @@ import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import css from "./NotesPage.module.css";
 
-export default function NotesClient() {
-  const searchParams = useSearchParams();
-  const defaultSearch =
-    typeof window === "undefined" ? "" : searchParams.get("search") || "";
-  const [search, setSearch] = useState(defaultSearch);
+interface NotesClientProps {
+  initialPage?: number;
+  initialSearch?: string;
+}
 
-  const [page, setPage] = useState(1);
+export default function NotesClient({
+  initialPage = 1,
+  initialSearch = ""
+}: NotesClientProps) {
+  const [search, setSearch] = useState<string>(initialSearch);
+  const [debouncedSearch] = useDebounce(search, 500);
+  const [page, setPage] = useState<number>(initialPage);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes({ page, search, perPage: 8 }),
+  const { data, isLoading, error } = useQuery<FetchNotesResponse, Error>({
+    queryKey: ["notes", page, debouncedSearch],
+    queryFn: () => fetchNotes({ page, perPage: 8, search: debouncedSearch }),
+    placeholderData: (prev) => prev
   });
 
   const totalPages = data?.totalPages ?? 1;
@@ -33,15 +40,28 @@ export default function NotesClient() {
     setSearch(query);
   };
 
+  useEffect(() => {
+    const modalRoot = document.getElementById("modal-root");
+    if (!modalRoot) {
+      const div = document.createElement("div");
+      div.id = "modal-root";
+      document.body.appendChild(div);
+    }
+  }, []);
+
   return (
     <section className={css.app}>
       <div className={css.toolbar}>
-        <SearchBox onSearch={handleSearch} />
+        <div className={css.searchWrapper}>
+          <SearchBox onSearch={handleSearch} />
+        </div>
+
         <Pagination
           totalPages={totalPages}
           currentPage={page}
           onPageChange={setPage}
         />
+
         <button className={css.button} onClick={() => setIsModalOpen(true)}>
           Add note
         </button>
