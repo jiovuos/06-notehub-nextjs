@@ -1,38 +1,35 @@
 import {
   dehydrate,
   HydrationBoundary,
-  QueryClient
+  QueryClient,
 } from "@tanstack/react-query";
-import { fetchNotes } from "@/lib/api";
+import { fetchNotes, type FetchNotesResponse } from "@/lib/api";
 import NotesClient from "./Notes.client";
 
-type PageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
-export default async function NotesPage(props: PageProps) {
-  const searchParams = await props.searchParams;
-
-  const pageParam = Array.isArray(searchParams?.page)
-    ? searchParams.page[0]
-    : searchParams?.page;
-  const searchParam = Array.isArray(searchParams?.search)
-    ? searchParams.search[0]
-    : searchParams?.search;
-
-  const page = pageParam ? Number(pageParam) : 1;
-  const search = searchParam ?? "";
+export default async function NotesPage() {
+  const page = 1;
+  const search = "";
 
   const queryClient = new QueryClient();
 
+  const initialNotes: FetchNotesResponse = await fetchNotes({
+    page,
+    perPage: 8,
+    search,
+  });
+
   await queryClient.prefetchQuery({
     queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes({ page, perPage: 8, search })
+    queryFn: () => Promise.resolve(initialNotes),
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NotesClient initialPage={page} initialSearch={search} />
+      <NotesClient
+        initialPage={page}
+        initialSearch={search}
+        initialNotes={initialNotes}
+      />
     </HydrationBoundary>
   );
 }

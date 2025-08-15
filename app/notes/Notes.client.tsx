@@ -13,23 +13,29 @@ import Pagination from "@/components/Pagination/Pagination";
 import css from "./NotesPage.module.css";
 
 interface NotesClientProps {
-  initialPage?: number;
-  initialSearch?: string;
+  initialPage: number;
+  initialSearch: string;
+  initialNotes: FetchNotesResponse;
 }
 
 export default function NotesClient({
-  initialPage = 1,
-  initialSearch = ""
+  initialPage,
+  initialSearch,
+  initialNotes,
 }: NotesClientProps) {
-  const [search, setSearch] = useState<string>(initialSearch);
+  const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch] = useDebounce(search, 500);
-  const [page, setPage] = useState<number>(initialPage);
+  const [page, setPage] = useState(initialPage);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 8, search: debouncedSearch }),
-    placeholderData: (prev) => prev
+    placeholderData: (prev) => prev,
+    initialData:
+      page === initialPage && debouncedSearch === initialSearch
+        ? initialNotes
+        : undefined,
   });
 
   const totalPages = data?.totalPages ?? 1;
@@ -68,7 +74,7 @@ export default function NotesClient({
       </div>
 
       {isLoading && <p>Loading...</p>}
-      {error && <p>Error loading notes: {(error as Error).message}</p>}
+      {error && <p>Error loading notes: {error.message}</p>}
       {!isLoading && !error && <NoteList notes={notes} />}
 
       {isModalOpen && (

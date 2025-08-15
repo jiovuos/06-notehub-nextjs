@@ -25,7 +25,7 @@ const validationSchema = Yup.object({
   content: Yup.string().max(500, "Too long").nullable(),
   tag: Yup.mixed<NoteTag>()
     .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
-    .required("Required")
+    .required("Required"),
 });
 
 export default function NoteForm({ onClose }: NoteFormProps) {
@@ -37,23 +37,23 @@ export default function NoteForm({ onClose }: NoteFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       onClose();
-    }
+    },
   });
 
   const initialValues: FormValues = {
     title: "",
     content: "",
-    tag: "Personal"
+    tag: "Personal",
   };
 
   const handleSubmit = (
     values: FormValues,
-    actions: FormikHelpers<FormValues>
+    actions: FormikHelpers<FormValues>,
   ) => {
     mutation.mutate({
       title: values.title,
       content: values.content ?? "",
-      tag: values.tag as NoteTag
+      tag: values.tag as NoteTag,
     });
     actions.setSubmitting(false);
   };

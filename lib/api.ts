@@ -4,8 +4,8 @@ import type { Note, NoteTag } from "@/types/note";
 const instance = axios.create({
   baseURL: "https://notehub-public.goit.study/api",
   headers: {
-    Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}`
-  }
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}`,
+  },
 });
 
 export interface FetchNotesParams {
@@ -22,14 +22,14 @@ export interface FetchNotesResponse {
 export const fetchNotes = async ({
   page,
   perPage,
-  search
+  search,
 }: FetchNotesParams): Promise<FetchNotesResponse> => {
   const params: Record<string, string | number> = { page, perPage };
   if (search?.trim()) params.search = search.trim();
 
   const res = await instance.get<{ notes: Note[]; totalPages: number }>(
     "/notes",
-    { params }
+    { params },
   );
   return { data: res.data.notes, totalPages: res.data.totalPages };
 };
