@@ -21,7 +21,7 @@ interface NotesClientProps {
 export default function NotesClient({
   initialPage,
   initialSearch,
-  initialNotes,
+  initialNotes
 }: NotesClientProps) {
   const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch] = useDebounce(search, 500);
@@ -35,7 +35,7 @@ export default function NotesClient({
     initialData:
       page === initialPage && debouncedSearch === initialSearch
         ? initialNotes
-        : undefined,
+        : undefined
   });
 
   const totalPages = data?.totalPages ?? 1;
@@ -62,11 +62,13 @@ export default function NotesClient({
           <SearchBox onSearch={handleSearch} />
         </div>
 
-        <Pagination
-          totalPages={totalPages}
-          currentPage={page}
-          onPageChange={setPage}
-        />
+        {totalPages > 1 && (
+          <Pagination
+            totalPages={totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
+        )}
 
         <button className={css.button} onClick={() => setIsModalOpen(true)}>
           Add note
@@ -75,7 +77,10 @@ export default function NotesClient({
 
       {isLoading && <p>Loading...</p>}
       {error && <p>Error loading notes: {error.message}</p>}
-      {!isLoading && !error && <NoteList notes={notes} />}
+      {!isLoading && !error && notes.length > 0 && <NoteList notes={notes} />}
+      {!isLoading && !error && notes.length === 0 && (
+        <p>No notes found. Try adding a new one!</p>
+      )}
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
